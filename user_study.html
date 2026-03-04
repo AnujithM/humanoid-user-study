@@ -475,6 +475,9 @@
         const group = e.target.closest('.radio-options');
         group.querySelectorAll('.radio-option').forEach(o => o.classList.remove('selected'));
         e.target.closest('.radio-option').classList.add('selected');
+        // Clear validation error once an option is selected
+        const qGroup = e.target.closest('.question-group');
+        if (qGroup) qGroup.classList.remove('has-error');
       }
     });
 
@@ -498,6 +501,10 @@
       updateCircle(pct);
     }
     document.addEventListener('input', updateProgress);
+    // Clear participant ID error on typing
+    document.getElementById('participantId').addEventListener('input', function() {
+      if (this.value.trim()) document.getElementById('card-pid').classList.remove('has-error');
+    });
     document.addEventListener('change', updateProgress);
 
     // ══════════════════════════════════════════════════════════
