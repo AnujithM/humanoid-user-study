@@ -9,8 +9,8 @@
 //     Name it: "User Study Responses"
 //
 //  2. Create two sheets (tabs) in the spreadsheet:
-//     - Sheet 1: rename to "Ours vs OmniControl"
-//     - Sheet 2: rename to "Ours vs MaskedMimic"
+//     - Sheet 1: rename to "Form 1"
+//     - Sheet 2: rename to "Form 2"
 //
 //  3. Click Extensions → Apps Script
 //
@@ -25,12 +25,14 @@
 //  6. Copy the Web App URL and paste into BOTH user_study1.html and user_study2.html
 //
 //  Routing:
-//   - user_study1.html sends { study: 'omni', ... } → logged to "Ours vs OmniControl" sheet
-//   - user_study2.html sends { study: 'mm', ... }   → logged to "Ours vs MaskedMimic" sheet
+//   - user_study1.html sends { study: 'form1', ... } → logged to "Form 1" sheet
+//   - user_study2.html sends { study: 'form2', ... } → logged to "Form 2" sheet
+//
+//  Both forms contain mixed Ours vs OmniControl and Ours vs MaskedMimic comparisons.
 //
 //  URLs:
-//   - https://anujithm.github.io/humanoid-user-study/user_study1.html (Ours vs OmniControl)
-//   - https://anujithm.github.io/humanoid-user-study/user_study2.html (Ours vs MaskedMimic)
+//   - https://anujithm.github.io/humanoid-user-study/user_study1.html (Part 1)
+//   - https://anujithm.github.io/humanoid-user-study/user_study2.html (Part 2)
 // ═══════════════════════════════════════════════════════════
 
 function doPost(e) {
@@ -40,10 +42,10 @@ function doPost(e) {
 
     // Route to the correct sheet based on the "study" field
     var sheetName;
-    if (data.study === 'mm') {
-      sheetName = 'Ours vs MaskedMimic';
+    if (data.study === 'form2') {
+      sheetName = 'Form 2';
     } else {
-      sheetName = 'Ours vs OmniControl';  // default
+      sheetName = 'Form 1';  // default
     }
 
     // Get or create the target sheet
@@ -92,6 +94,6 @@ function doPost(e) {
 // Allow GET requests to test the endpoint
 function doGet(e) {
   return ContentService
-    .createTextOutput(JSON.stringify({ status: 'ok', message: 'User Study Logger is running. Routes: omni → Sheet 1, mm → Sheet 2.' }))
+    .createTextOutput(JSON.stringify({ status: 'ok', message: 'User Study Logger is running. Routes: form1 → Form 1, form2 → Form 2.' }))
     .setMimeType(ContentService.MimeType.JSON);
 }
