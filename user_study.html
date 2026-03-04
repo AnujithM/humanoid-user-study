@@ -272,12 +272,12 @@
 
     <form id="studyForm" novalidate>
 
-      <!-- ═══ PARTICIPANT ID ═══ -->
+      <!-- ═══ EMAIL ═══ -->
       <div class="card" id="card-pid">
-        <label class="field-label required" for="participantId">Participant ID</label>
-        <p class="field-desc">Please enter your participant ID or email address.</p>
-        <input type="text" id="participantId" name="participantId" placeholder="e.g. P01 or your email" required />
-        <p class="error-msg">This field is required.</p>
+        <label class="field-label required" for="participantId">Email Address</label>
+        <p class="field-desc">Please enter your email. One submission per email is allowed.</p>
+        <input type="email" id="participantId" name="participantId" placeholder="e.g. you@example.com" required />
+        <p class="error-msg" id="emailError">Please enter a valid email address.</p>
       </div>
 
       <!-- Sections inserted by JS -->
@@ -576,7 +576,17 @@
       let valid = true;
 
       const pid = document.getElementById('participantId').value.trim();
-      if (!pid) { document.getElementById('card-pid').classList.add('has-error'); valid = false; }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!pid || !emailRegex.test(pid)) {
+        document.getElementById('emailError').textContent = !pid ? 'Please enter a valid email address.' : 'Please enter a valid email format.';
+        document.getElementById('card-pid').classList.add('has-error'); valid = false;
+      }
+      // Check for duplicate submission
+      const submitted = JSON.parse(localStorage.getItem('userStudySubmitted') || '[]');
+      if (submitted.includes(pid.toLowerCase())) {
+        document.getElementById('emailError').textContent = 'This email has already submitted a response.';
+        document.getElementById('card-pid').classList.add('has-error'); valid = false;
+      }
 
       document.querySelectorAll('.question-group[data-required]').forEach(group => {
         const radios = group.querySelectorAll('input[type="radio"]');
@@ -598,7 +608,7 @@
         return rawAnswer;
       }
 
-      const response = { timestamp: new Date().toISOString(), participantId: pid };
+      const response = { timestamp: new Date().toISOString(), email: pid };
       MOTIONS.forEach(m => {
         QUESTIONS.forEach(q => {
           const el = document.querySelector(`input[name="m${m.id}_${q.key}"]:checked`);
@@ -606,6 +616,11 @@
           response[`m${m.id}_${q.key}`] = decodeAnswer(m.id, raw);
         });
       });
+
+      // Mark email as submitted
+      const alreadySubmitted = JSON.parse(localStorage.getItem('userStudySubmitted') || '[]');
+      alreadySubmitted.push(pid.toLowerCase());
+      localStorage.setItem('userStudySubmitted', JSON.stringify(alreadySubmitted));
 
       // ── Send to Google Sheets ──
       submitToGoogleSheets(response);
