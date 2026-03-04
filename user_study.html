@@ -196,19 +196,7 @@
     .success-box h2 { font-size: 1.4rem; margin-bottom: 10px; }
     .success-box p { color: var(--text-muted); font-size: .92rem; }
 
-    /* ═══ ADMIN ═══ */
-    .admin-panel {
-      margin-top: 48px; background: rgba(245,158,11,.05);
-      border: 1.5px dashed rgba(245,158,11,.3); border-radius: var(--radius); padding: 28px 32px;
-    }
-    .admin-panel h3 { color: var(--accent); margin-bottom: 8px; font-size: 1rem; }
-    .admin-panel > p { color: var(--text-muted); font-size: .85rem; margin-bottom: 14px; }
-    .resp-table-wrap { overflow-x: auto; margin-top: 14px; max-height: 300px; overflow-y: auto; }
-    .resp-table { width: 100%; border-collapse: collapse; font-size: .75rem; }
-    .resp-table th, .resp-table td { border: 1px solid var(--surface); padding: 6px 8px; text-align: left; white-space: nowrap; }
-    .resp-table th { background: var(--bg); font-weight: 600; color: var(--text-muted); position: sticky; top: 0; }
 
-    .no-resp { color: var(--text-dim); font-style: italic; padding: 14px 0; font-size: .88rem; }
 
     /* ═══ PROGRESS CIRCLE (bottom-right) ═══ */
     .progress-circle {
@@ -309,17 +297,7 @@
       </div>
     </div>
 
-    <!-- ═══ ADMIN ═══ -->
-    <div class="admin-panel">
-      <h3>Admin: Collected Responses</h3>
-      <p>Responses saved in browser localStorage. Export as CSV for statistical analysis.</p>
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <button class="btn btn-secondary" onclick="renderTable()">Refresh</button>
-        <button class="btn btn-primary" onclick="exportCSV()">Export CSV</button>
-        <button class="btn btn-secondary" onclick="if(confirm('Delete ALL responses?')){localStorage.removeItem('userStudyResponses');renderTable();}">Clear All</button>
-      </div>
-      <div class="resp-table-wrap" id="tableContainer"></div>
-    </div>
+
   </div>
 
   <!-- Progress circle -->
@@ -629,11 +607,6 @@
         });
       });
 
-      // Save locally
-      const all = JSON.parse(localStorage.getItem('userStudyResponses') || '[]');
-      all.push(response);
-      localStorage.setItem('userStudyResponses', JSON.stringify(all));
-
       // ── Send to Google Sheets ──
       submitToGoogleSheets(response);
 
@@ -643,30 +616,10 @@
         document.getElementById('studyForm').reset();
         document.querySelectorAll('.radio-option.selected').forEach(o => o.classList.remove('selected'));
         updateProgress();
-        renderTable();
       }, 3000);
     });
 
-    // ══════════════════════════════════════════════════════════
-    //  ADMIN TABLE
-    // ══════════════════════════════════════════════════════════
-    function renderTable() {
-      const all = JSON.parse(localStorage.getItem('userStudyResponses') || '[]');
-      const tc = document.getElementById('tableContainer');
-      if (!all.length) { tc.innerHTML = '<p class="no-resp">No responses yet.</p>'; return; }
 
-      const qL = { q1: 'Text', q2: 'Smooth', q3: 'Stable' };
-      let cols = [['Time','timestamp'],['PID','participantId']];
-      MOTIONS.forEach(m => { Object.entries(qL).forEach(([q,l]) => { cols.push([`${m.id}_${l}`, `m${m.id}_${q}`]); }); });
-
-      let html = '<table class="resp-table"><thead><tr>';
-      cols.forEach(c => html += `<th>${c[0]}</th>`);
-      html += '</tr></thead><tbody>';
-      all.forEach(r => { html += '<tr>'; cols.forEach(c => html += `<td>${r[c[1]]||''}</td>`); html += '</tr>'; });
-      html += '</tbody></table>';
-      tc.innerHTML = html;
-    }
-    renderTable();
 
     // ══════════════════════════════════════════════════════════
     //  GOOGLE SHEETS LOGGING
@@ -690,24 +643,7 @@
         .catch(err => console.error('Google Sheets error:', err));
     }
 
-    function exportCSV() {
-      const all = JSON.parse(localStorage.getItem('userStudyResponses') || '[]');
-      if (!all.length) { alert('No responses.'); return; }
 
-      const qL = { q1: 'TextFollowing', q2: 'Smoothness', q3: 'Stability' };
-      let headers = ['Timestamp','ParticipantID'];
-      let keys = ['timestamp','participantId'];
-      MOTIONS.forEach(m => { Object.entries(qL).forEach(([q,l]) => { headers.push(`ID${m.id}_${l}`); keys.push(`m${m.id}_${q}`); }); });
-
-      let csv = headers.join(',') + '\n';
-      all.forEach(r => { csv += keys.map(k => `"${(r[k]||'').replace(/"/g,'""')}"`).join(',') + '\n'; });
-
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'user_study_responses.csv';
-      a.click();
-    }
   </script>
 </body>
 </html>
