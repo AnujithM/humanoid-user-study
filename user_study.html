@@ -148,6 +148,14 @@
     input[type="text"]:focus, input[type="email"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
     input[type="email"].valid-email { border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.12); }
     input[type="email"].invalid-email { border-color: var(--error); box-shadow: 0 0 0 3px rgba(248,113,113,.12); }
+    .email-row { display: flex; gap: 10px; align-items: stretch; }
+    .email-row input { flex: 1; }
+    .btn-confirm { padding: 14px 24px; border: none; border-radius: var(--radius-sm); font-size: .9rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; white-space: nowrap; }
+    .btn-confirm { background: var(--primary); color: #fff; }
+    .btn-confirm:hover { background: #4f46e5; }
+    .btn-confirm.confirmed { background: #22c55e; cursor: default; }
+    .btn-confirm.confirmed:hover { background: #22c55e; }
+    input[type="email"]:disabled { opacity: .7; cursor: not-allowed; }
 
     /* ═══ RADIO ═══ */
     .question-group { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid rgba(51,65,85,.5); }
@@ -279,7 +287,10 @@
       <div class="card" id="card-pid">
         <label class="field-label required" for="participantId">Email Address</label>
         <p class="field-desc">Please enter your email. One submission per email is allowed.</p>
-        <input type="email" id="participantId" name="participantId" placeholder="e.g. you@example.com" required />
+        <div class="email-row">
+          <input type="email" id="participantId" name="participantId" placeholder="e.g. you@example.com" required />
+          <button type="button" class="btn-confirm" id="confirmEmailBtn">Confirm</button>
+        </div>
         <p class="error-msg" id="emailError">Please enter a valid email address.</p>
       </div>
 
@@ -502,6 +513,36 @@
         document.getElementById('card-pid').classList.add('has-error');
       }
     });
+
+    // Confirm email button
+    let emailConfirmed = false;
+    document.getElementById('confirmEmailBtn').addEventListener('click', function() {
+      const val = emailInput.value.trim();
+      if (!val || !emailRegexLive.test(val)) {
+        emailInput.classList.add('invalid-email');
+        emailInput.classList.remove('valid-email');
+        document.getElementById('emailError').textContent = 'Please enter a valid email address.';
+        document.getElementById('card-pid').classList.add('has-error');
+        emailInput.focus();
+        return;
+      }
+      // Check duplicate
+      const submitted = JSON.parse(localStorage.getItem('userStudySubmitted') || '[]');
+      if (submitted.includes(val.toLowerCase())) {
+        document.getElementById('emailError').textContent = 'This email has already submitted a response.';
+        document.getElementById('card-pid').classList.add('has-error');
+        return;
+      }
+      // Lock email
+      emailConfirmed = true;
+      emailInput.disabled = true;
+      emailInput.classList.add('valid-email');
+      emailInput.classList.remove('invalid-email');
+      document.getElementById('card-pid').classList.remove('has-error');
+      this.textContent = '✓ Confirmed';
+      this.classList.add('confirmed');
+    });
+
     document.addEventListener('change', updateProgress);
 
     // ══════════════════════════════════════════════════════════
@@ -595,15 +636,8 @@
       let valid = true;
 
       const pid = document.getElementById('participantId').value.trim();
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-      if (!pid || !emailRegex.test(pid)) {
-        document.getElementById('emailError').textContent = !pid ? 'Please enter your email address.' : 'Please enter a valid email (e.g. you@gmail.com).';
-        document.getElementById('card-pid').classList.add('has-error'); valid = false;
-      }
-      // Check for duplicate submission
-      const submitted = JSON.parse(localStorage.getItem('userStudySubmitted') || '[]');
-      if (submitted.includes(pid.toLowerCase())) {
-        document.getElementById('emailError').textContent = 'This email has already submitted a response.';
+      if (!emailConfirmed) {
+        document.getElementById('emailError').textContent = 'Please confirm your email first.';
         document.getElementById('card-pid').classList.add('has-error'); valid = false;
       }
 
@@ -649,6 +683,13 @@
         document.getElementById('successOverlay').classList.remove('visible');
         document.getElementById('studyForm').reset();
         document.querySelectorAll('.radio-option.selected').forEach(o => o.classList.remove('selected'));
+        // Reset email confirm state
+        emailConfirmed = false;
+        emailInput.disabled = false;
+        emailInput.classList.remove('valid-email', 'invalid-email');
+        const confirmBtn = document.getElementById('confirmEmailBtn');
+        confirmBtn.textContent = 'Confirm';
+        confirmBtn.classList.remove('confirmed');
         updateProgress();
       }, 3000);
     });
