@@ -426,10 +426,15 @@
         </div>`;
     }
 
+    // GitHub raw URL base for serving LFS files (GitHub Pages doesn't serve LFS)
+    const REPO = 'AnujithM/humanoid-user-study';
+    const BRANCH = 'main';
+    const BASE = `https://media.githubusercontent.com/media/${REPO}/${BRANCH}`;
+
     MOTIONS.forEach((m, i) => {
       const s = shuffleMap[m.id];
-      const srcA = s.a === 'dpo' ? `Real_DPO/Real_DPO/${m.id}.mp4` : `Real_OMNI/${m.id}.mp4`;
-      const srcB = s.b === 'dpo' ? `Real_DPO/Real_DPO/${m.id}.mp4` : `Real_OMNI/${m.id}.mp4`;
+      const srcA = s.a === 'dpo' ? `${BASE}/Real_DPO/${m.id}.mp4` : `${BASE}/Real_OMNI/${m.id}.mp4`;
+      const srcB = s.b === 'dpo' ? `${BASE}/Real_DPO/${m.id}.mp4` : `${BASE}/Real_OMNI/${m.id}.mp4`;
 
       const card = document.createElement('div');
       card.className = 'card comparison-card';
