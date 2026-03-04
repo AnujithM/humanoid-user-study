@@ -24,7 +24,7 @@
 //  6. Paste that URL into user_study.html at line:
 //     const GOOGLE_SCRIPT_URL = 'YOUR_URL_HERE';
 //
-//  That's it! Every form submission will now log to your sheet.
+//  That's it! Every form submission will now log to your sheet:: https://anujithm.github.io/humanoid-user-study/user_study.html ::.
 // ═══════════════════════════════════════════════════════════
 
 function doPost(e) {

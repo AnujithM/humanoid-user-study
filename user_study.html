@@ -282,8 +282,9 @@
 
     <!-- ═══ STATS ═══ -->
     <div class="stats-bar">
-      <div class="stat-chip"><div class="num">42</div><div class="lbl">Motion Pairs</div></div>
-      <div class="stat-chip"><div class="num">126</div><div class="lbl">Total Questions</div></div>
+      <div class="stat-chip"><div class="num">41</div><div class="lbl">Motions</div></div>
+      <div class="stat-chip"><div class="num">82</div><div class="lbl">Comparisons</div></div>
+      <div class="stat-chip"><div class="num">246</div><div class="lbl">Total Questions</div></div>
       <div class="stat-chip"><div class="num" id="answeredCount">0</div><div class="lbl">Answered</div></div>
     </div>
 
@@ -337,7 +338,7 @@
 
   <script>
     // ══════════════════════════════════════════════════════════
-    //  MOTION DATA — 42 common IDs with text prompts
+    //  MOTION DATA — 41 common IDs with text prompts
     // ══════════════════════════════════════════════════════════
     const MOTIONS = [
       { id: "115",  text: "person raises left arm to shoulder height and then lowers it back down by side" },
@@ -368,7 +369,6 @@
       { id: "1510", text: "this person does jumping jacks then kicks with his right leg." },
       { id: "1604", text: "a person walks forward." },
       { id: "1654", text: "a figure gestures with arms outstretched to the left and then twists with arms still extended" },
-      { id: "1691", text: "the man moves forward slowly" },
       { id: "1708", text: "the man plays the violin." },
       { id: "1836", text: "a person looks to the right then turns left to take a look left." },
       { id: "1840", text: "the stick figure is walking in form of a back wards letter j." },
@@ -392,15 +392,20 @@
     const OPTIONS = ['Video A', 'Video B', 'Both are similar'];
 
     // ══════════════════════════════════════════════════════════
-    //  SHUFFLE MAP — randomly assign DPO/OMNI to Video A/B
-    //  Stored so we can decode responses back to method names
+    //  SHUFFLE MAP — randomly assign methods to Video A/B
+    //  Two maps: one for Ours vs OmniControl, one for Ours vs MaskedMimic
     // ══════════════════════════════════════════════════════════
-    const shuffleMap = {};  // { motionId: { a: 'dpo'|'omni', b: 'omni'|'dpo' } }
+    const shuffleMapOmni = {};   // { motionId: { a: 'dpo'|'omni', b: 'omni'|'dpo' } }
+    const shuffleMapMM = {};     // { motionId: { a: 'dpo'|'mm', b: 'mm'|'dpo' } }
     MOTIONS.forEach(m => {
-      const dpoFirst = Math.random() < 0.5;
-      shuffleMap[m.id] = dpoFirst
+      const dpoFirstOmni = Math.random() < 0.5;
+      shuffleMapOmni[m.id] = dpoFirstOmni
         ? { a: 'dpo', b: 'omni' }
         : { a: 'omni', b: 'dpo' };
+      const dpoFirstMM = Math.random() < 0.5;
+      shuffleMapMM[m.id] = dpoFirstMM
+        ? { a: 'dpo', b: 'mm' }
+        : { a: 'mm', b: 'dpo' };
     });
 
     // ══════════════════════════════════════════════════════════
@@ -429,16 +434,18 @@
     const BASE = `https://media.githubusercontent.com/media/${REPO}/${BRANCH}`;
 
     MOTIONS.forEach((m, i) => {
-      const s = shuffleMap[m.id];
-      const srcA = s.a === 'dpo' ? `${BASE}/Real_DPO/${m.id}.mp4` : `${BASE}/Real_OMNI/${m.id}.mp4`;
-      const srcB = s.b === 'dpo' ? `${BASE}/Real_DPO/${m.id}.mp4` : `${BASE}/Real_OMNI/${m.id}.mp4`;
+      // === Comparison 1: Ours vs OmniControl ===
+      const sO = shuffleMapOmni[m.id];
+      const srcOA = sO.a === 'dpo' ? `${BASE}/Real_DPO/${m.id}.mp4` : `${BASE}/Real_OMNI/${m.id}.mp4`;
+      const srcOB = sO.b === 'dpo' ? `${BASE}/Real_DPO/${m.id}.mp4` : `${BASE}/Real_OMNI/${m.id}.mp4`;
 
-      const card = document.createElement('div');
-      card.className = 'card comparison-card';
-      card.dataset.motionId = m.id;
-      card.innerHTML = `
+      const cardO = document.createElement('div');
+      cardO.className = 'card comparison-card';
+      cardO.dataset.motionId = m.id;
+      cardO.dataset.comparison = 'omni';
+      cardO.innerHTML = `
         <div class="section-header">
-          <div class="section-num">${i + 1}</div>
+          <div class="section-num">${i * 2 + 1}</div>
           <div class="section-title">Ours vs OmniControl</div>
           <div class="motion-id-badge">ID ${m.id}</div>
         </div>
@@ -452,16 +459,52 @@
         <div class="video-row">
           <div class="video-cell">
             <span class="video-tag tag-a">Video A</span>
-            <video controls preload="metadata"><source src="${srcA}" type="video/mp4" /></video>
+            <video controls preload="metadata"><source src="${srcOA}" type="video/mp4" /></video>
           </div>
           <div class="video-cell">
             <span class="video-tag tag-b">Video B</span>
-            <video controls preload="metadata"><source src="${srcB}" type="video/mp4" /></video>
+            <video controls preload="metadata"><source src="${srcOB}" type="video/mp4" /></video>
           </div>
         </div>
-        ${QUESTIONS.map(q => makeRadioGroup('m' + m.id, q)).join('')}
+        ${QUESTIONS.map(q => makeRadioGroup('omni_m' + m.id, q)).join('')}
       `;
-      container.appendChild(card);
+      container.appendChild(cardO);
+
+      // === Comparison 2: Ours vs MaskedMimic ===
+      const sM = shuffleMapMM[m.id];
+      const srcMA = sM.a === 'dpo' ? `${BASE}/Real_DPO/${m.id}.mp4` : `${BASE}/Real_MaskedMimic/${m.id}.mp4`;
+      const srcMB = sM.b === 'dpo' ? `${BASE}/Real_DPO/${m.id}.mp4` : `${BASE}/Real_MaskedMimic/${m.id}.mp4`;
+
+      const cardM = document.createElement('div');
+      cardM.className = 'card comparison-card';
+      cardM.dataset.motionId = m.id;
+      cardM.dataset.comparison = 'mm';
+      cardM.innerHTML = `
+        <div class="section-header">
+          <div class="section-num">${i * 2 + 2}</div>
+          <div class="section-title">Ours vs MaskedMimic</div>
+          <div class="motion-id-badge">ID ${m.id}</div>
+        </div>
+        <div class="text-prompt">
+          <span class="icon">\uD83D\uDCAC</span>
+          <div>
+            <div class="prompt-label">Text Input</div>
+            <div class="prompt-text">\u201C${m.text}\u201D</div>
+          </div>
+        </div>
+        <div class="video-row">
+          <div class="video-cell">
+            <span class="video-tag tag-a">Video A</span>
+            <video controls preload="metadata"><source src="${srcMA}" type="video/mp4" /></video>
+          </div>
+          <div class="video-cell">
+            <span class="video-tag tag-b">Video B</span>
+            <video controls preload="metadata"><source src="${srcMB}" type="video/mp4" /></video>
+          </div>
+        </div>
+        ${QUESTIONS.map(q => makeRadioGroup('mm_m' + m.id, q)).join('')}
+      `;
+      container.appendChild(cardM);
     });
 
     // ══════════════════════════════════════════════════════════
@@ -481,13 +524,14 @@
     // ══════════════════════════════════════════════════════════
     //  PROGRESS
     // ══════════════════════════════════════════════════════════
-    const totalQs = MOTIONS.length * 3;
+    const totalQs = MOTIONS.length * 3 * 2;
 
     function updateProgress() {
       let filled = 0;
       MOTIONS.forEach(m => {
         QUESTIONS.forEach(q => {
-          if (document.querySelector(`input[name="m${m.id}_${q.key}"]:checked`)) filled++;
+          if (document.querySelector(`input[name="omni_m${m.id}_${q.key}"]:checked`)) filled++;
+          if (document.querySelector(`input[name="mm_m${m.id}_${q.key}"]:checked`)) filled++;
         });
       });
       const pct = Math.round((filled / totalQs) * 100);
@@ -655,20 +699,28 @@
       }
 
       // Decode shuffle: convert "Video A"/"Video B" → actual method name
-      function decodeAnswer(motionId, rawAnswer) {
+      function decodeOmni(motionId, rawAnswer) {
         if (rawAnswer === 'Both are similar') return rawAnswer;
-        const s = shuffleMap[motionId];
+        const s = shuffleMapOmni[motionId];
         if (rawAnswer === 'Video A') return s.a === 'dpo' ? 'Ours' : 'OmniControl';
         if (rawAnswer === 'Video B') return s.b === 'dpo' ? 'Ours' : 'OmniControl';
+        return rawAnswer;
+      }
+      function decodeMM(motionId, rawAnswer) {
+        if (rawAnswer === 'Both are similar') return rawAnswer;
+        const s = shuffleMapMM[motionId];
+        if (rawAnswer === 'Video A') return s.a === 'dpo' ? 'Ours' : 'MaskedMimic';
+        if (rawAnswer === 'Video B') return s.b === 'dpo' ? 'Ours' : 'MaskedMimic';
         return rawAnswer;
       }
 
       const response = { timestamp: new Date().toISOString(), email: pid };
       MOTIONS.forEach(m => {
         QUESTIONS.forEach(q => {
-          const el = document.querySelector(`input[name="m${m.id}_${q.key}"]:checked`);
-          const raw = el ? el.value : '';
-          response[`m${m.id}_${q.key}`] = decodeAnswer(m.id, raw);
+          const elO = document.querySelector(`input[name="omni_m${m.id}_${q.key}"]:checked`);
+          response[`omni_m${m.id}_${q.key}`] = decodeOmni(m.id, elO ? elO.value : '');
+          const elM = document.querySelector(`input[name="mm_m${m.id}_${q.key}"]:checked`);
+          response[`mm_m${m.id}_${q.key}`] = decodeMM(m.id, elM ? elM.value : '');
         });
       });
 
