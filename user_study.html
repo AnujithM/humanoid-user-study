@@ -72,17 +72,6 @@
     .stat-chip .num { font-size: 1.5rem; font-weight: 800; color: var(--primary-light); }
     .stat-chip .lbl { font-size: .78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
 
-    /* ═══ PROGRESS ═══ */
-    .progress-wrap {
-      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
-      padding: 16px 22px; margin-bottom: 28px;
-      display: flex; align-items: center; gap: 16px;
-      position: sticky; top: 0; z-index: 40; backdrop-filter: blur(10px);
-    }
-    .progress-wrap .label { font-size: .85rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
-    .progress-track { flex: 1; background: var(--surface); height: 8px; border-radius: 4px; overflow: hidden; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 4px; transition: width .5s cubic-bezier(.4,0,.2,1); width: 0%; }
-    .progress-pct { font-size: .85rem; font-weight: 700; color: var(--accent); min-width: 36px; text-align: right; }
 
     /* ═══ CARDS ═══ */
     .card {
@@ -246,8 +235,16 @@
       position: absolute; inset: 0;
       display: flex; align-items: center; justify-content: center;
       font-size: .78rem; font-weight: 800; color: var(--text);
-      pointer-events: none;
+      pointer-events: none; transition: opacity .2s;
     }
+    .progress-circle .arrow-text {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; color: var(--text);
+      pointer-events: none; opacity: 0; transition: opacity .2s;
+    }
+    .progress-circle:hover .pct-text { opacity: 0; }
+    .progress-circle:hover .arrow-text { opacity: 1; }
     .progress-circle.complete .ring-fg { stroke: var(--success); }
     .progress-circle.complete .pct-text { color: var(--success); }
 
@@ -290,12 +287,6 @@
       <div class="stat-chip"><div class="num" id="answeredCount">0</div><div class="lbl">Answered</div></div>
     </div>
 
-    <!-- ═══ PROGRESS (sticky) ═══ -->
-    <div class="progress-wrap">
-      <span class="label">Progress</span>
-      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-      <span class="progress-pct" id="progressPct">0%</span>
-    </div>
 
     <form id="studyForm" novalidate>
 
@@ -340,6 +331,7 @@
       <circle class="ring-fg" id="ringFg" cx="28" cy="28" r="26" />
     </svg>
     <div class="pct-text" id="circlePct">0%</div>
+    <div class="arrow-text">&#8593;</div>
   </div>
   <canvas id="confettiCanvas"></canvas>
 
@@ -499,8 +491,6 @@
         });
       });
       const pct = Math.round((filled / totalQs) * 100);
-      document.getElementById('progressFill').style.width = pct + '%';
-      document.getElementById('progressPct').textContent = pct + '%';
       document.getElementById('answeredCount').textContent = filled;
       updateCircle(pct);
     }
@@ -694,7 +684,6 @@
       document.getElementById('studyForm').style.display = 'none';
       document.querySelector('.hero').style.display = 'none';
       document.querySelector('.stats-bar').style.display = 'none';
-      document.querySelector('.progress-wrap').style.display = 'none';
       document.getElementById('progressCircle').style.display = 'none';
       document.getElementById('thankYouPage').classList.add('visible');
       window.scrollTo({ top: 0, behavior: 'smooth' });
