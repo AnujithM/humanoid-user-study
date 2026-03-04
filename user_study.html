@@ -392,6 +392,14 @@
     const OPTIONS = ['Video A', 'Video B', 'Both are similar'];
 
     // ══════════════════════════════════════════════════════════
+    //  RANDOMIZE MOTION ORDER (Fisher-Yates shuffle)
+    // ══════════════════════════════════════════════════════════
+    for (let i = MOTIONS.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [MOTIONS[i], MOTIONS[j]] = [MOTIONS[j], MOTIONS[i]];
+    }
+
+    // ══════════════════════════════════════════════════════════
     //  SHUFFLE MAP — randomly assign methods to Video A/B
     //  Two maps: one for Ours vs OmniControl, one for Ours vs MaskedMimic
     // ══════════════════════════════════════════════════════════
