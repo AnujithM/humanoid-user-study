@@ -397,7 +397,7 @@
       { key: 'q2', text: '2. Which motion of the two is smoother?' },
       { key: 'q3', text: '3. Which motion is more stable overall?' },
     ];
-    const OPTIONS = ['Video A', 'Video B', 'Both are similar', 'Cannot tell'];
+    const OPTIONS = ['Video A', 'Video B', 'Both are similar'];
 
     // ══════════════════════════════════════════════════════════
     //  SHUFFLE MAP — randomly assign DPO/OMNI to Video A/B
@@ -666,7 +666,7 @@
 
       // Decode shuffle: convert "Video A"/"Video B" → actual method name
       function decodeAnswer(motionId, rawAnswer) {
-        if (rawAnswer === 'Both are similar' || rawAnswer === 'Cannot tell') return rawAnswer;
+        if (rawAnswer === 'Both are similar') return rawAnswer;
         const s = shuffleMap[motionId];
         if (rawAnswer === 'Video A') return s.a === 'dpo' ? 'Ours' : 'OmniControl';
         if (rawAnswer === 'Video B') return s.b === 'dpo' ? 'Ours' : 'OmniControl';
