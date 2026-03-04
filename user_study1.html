@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Humanoid Motion Comparison User Study — Part 1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-light: #818cf8;
+      --primary-dark: #4f46e5;
+      --accent: #f59e0b;
+      --bg: #0f172a;
+      --bg-card: #1e293b;
+      --surface: #334155;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --border: #334155;
+      --error: #f87171;
+      --success: #34d399;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --shadow: 0 4px 30px rgba(0,0,0,.3);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--surface); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    /* ═══ HERO ═══ */
+    .hero {
+      position: relative;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%);
+      border-radius: var(--radius);
+      padding: 52px 44px 44px;
+      margin-bottom: 32px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(99,102,241,.3);
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -60%; right: -20%;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(255,255,255,.08) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .hero h1 { font-size: 2rem; font-weight: 800; letter-spacing: -.02em; margin-bottom: 20px; position: relative; z-index: 1; }
+    .hero p  { font-size: .95rem; opacity: .9; margin-bottom: 8px; position: relative; z-index: 1; max-width: 640px; }
+    .hero .criteria { margin: 16px 0 0 4px; position: relative; z-index: 1; }
+    .hero .criteria li { font-size: .9rem; opacity: .85; margin-bottom: 4px; padding-left: 8px; list-style: none; }
+    .hero .criteria li::before { content: '\2022'; color: var(--accent); font-weight: 700; margin-right: 8px; }
+
+    /* ═══ STATS ═══ */
+    .stats-bar { display: flex; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+    .stat-chip { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 20px; flex: 1; min-width: 140px; text-align: center; }
+    .stat-chip .num { font-size: 1.5rem; font-weight: 800; color: var(--primary-light); }
+    .stat-chip .lbl { font-size: .78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+
+    /* ═══ CARDS ═══ */
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 32px 36px; margin-bottom: 20px; box-shadow: var(--shadow); transition: border-color .25s;
+    }
+    .card:hover { border-color: rgba(99,102,241,.3); }
+
+    /* ═══ SECTION HEADER ═══ */
+    .section-header { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; flex-wrap: wrap; }
+    .section-num {
+      background: linear-gradient(135deg, var(--primary), #a855f7);
+      color: #fff; font-weight: 800; font-size: .8rem;
+      min-width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .section-title { font-size: 1.15rem; font-weight: 700; color: var(--text); }
+    .motion-id-badge {
+      background: var(--surface); color: var(--accent);
+      font-size: .75rem; font-weight: 700;
+      padding: 4px 12px; border-radius: 20px;
+      letter-spacing: .04em; margin-left: auto;
+    }
+
+    .text-prompt {
+      background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.2);
+      border-radius: var(--radius-sm); padding: 12px 18px; margin-bottom: 20px;
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .text-prompt .icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+    .text-prompt .prompt-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); font-weight: 700; margin-bottom: 2px; }
+    .text-prompt .prompt-text { font-size: .9rem; color: #fbbf24; font-style: italic; }
+
+    /* ═══ VIDEO ═══ */
+    .video-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .video-cell {
+      position: relative; border-radius: var(--radius-sm); overflow: hidden;
+      background: #000; border: 2px solid var(--surface); transition: border-color .2s;
+    }
+    .video-cell:hover { border-color: var(--primary-light); }
+    .video-cell video { width: 100%; display: block; aspect-ratio: 4/3; object-fit: contain; background: #000; }
+    .video-tag {
+      position: absolute; top: 10px; left: 10px;
+      font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
+      padding: 4px 12px; border-radius: 6px; z-index: 2; pointer-events: none;
+    }
+    .tag-a { background: #3b82f6; color: #fff; }
+    .tag-b { background: #ec4899; color: #fff; }
+
+    /* ═══ FORM ═══ */
+    label.field-label { display: block; font-weight: 600; margin-bottom: 6px; font-size: .93rem; }
+    .required::after { content: ' *'; color: var(--error); font-weight: 700; }
+    .field-desc { font-size: .82rem; color: var(--text-dim); margin-bottom: 12px; }
+
+    input[type="text"], input[type="email"] {
+      width: 100%; padding: 14px 18px;
+      border: 1.5px solid var(--surface); border-radius: var(--radius-sm);
+      font-size: 1rem; background: var(--bg); color: var(--text);
+      transition: border-color .2s, box-shadow .2s; outline: none; font-family: inherit;
+      letter-spacing: .02em;
+    }
+    input[type="text"]:focus, input[type="email"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+    input[type="email"].valid-email { border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.12); }
+    input[type="email"].invalid-email { border-color: var(--error); box-shadow: 0 0 0 3px rgba(248,113,113,.12); }
+    .email-row { display: flex; gap: 10px; align-items: stretch; }
+    .email-row input { flex: 1; }
+    .btn-confirm { padding: 10px 20px; border: 1.5px solid var(--primary); border-radius: var(--radius-sm); font-size: .82rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; white-space: nowrap; background: transparent; color: var(--primary); letter-spacing: .02em; }
+    .btn-confirm:hover { background: rgba(99,102,241,.1); }
+    .btn-confirm.confirmed { border-color: #22c55e; color: #22c55e; background: rgba(34,197,94,.08); cursor: default; }
+    .btn-confirm.confirmed:hover { background: rgba(34,197,94,.08); }
+    input[type="email"]:disabled { opacity: .7; cursor: not-allowed; }
+
+    /* ═══ RADIO ═══ */
+    .question-group { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid rgba(51,65,85,.5); }
+    .question-group:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .question-text { font-weight: 600; margin-bottom: 10px; font-size: .9rem; }
+    .radio-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .radio-option {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 16px; border: 1.5px solid var(--surface);
+      border-radius: var(--radius-sm); cursor: pointer; transition: all .15s;
+    }
+    .radio-option:hover { border-color: var(--primary-light); background: rgba(99,102,241,.06); }
+    .radio-option.selected { border-color: var(--primary); background: rgba(99,102,241,.1); }
+    .radio-option input[type="radio"] { accent-color: var(--primary); width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+    .radio-option label { cursor: pointer; font-size: .87rem; flex: 1; user-select: none; }
+
+    /* ═══ BUTTONS ═══ */
+    .btn {
+      padding: 12px 30px; border: none; border-radius: var(--radius-sm);
+      font-size: .92rem; font-weight: 600; cursor: pointer; transition: all .2s; font-family: inherit;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #7c3aed); color: #fff;
+      box-shadow: 0 4px 14px rgba(99,102,241,.35);
+    }
+    .btn-primary:hover { box-shadow: 0 4px 20px rgba(99,102,241,.5); transform: translateY(-1px); }
+    .btn-secondary { background: var(--surface); color: var(--text); }
+    .btn-secondary:hover { background: #475569; }
+
+    /* ═══ VALIDATION ═══ */
+    .error-msg { color: var(--error); font-size: .8rem; margin-top: 6px; display: none; }
+    .has-error .error-msg { display: block; }
+    .has-error input[type="text"], .has-error input[type="email"] { border-color: var(--error); }
+    .has-error .radio-option { border-color: rgba(248,113,113,.4); }
+
+    /* ═══ SUCCESS ═══ */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(6px); z-index: 100; justify-content: center; align-items: center; }
+    .overlay.visible { display: flex; }
+    .success-box {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 52px 48px; text-align: center; max-width: 460px; box-shadow: 0 24px 80px rgba(0,0,0,.5);
+    }
+    .success-box .icon-circle {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, #34d399, #059669);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 24px; font-size: 2.2rem;
+    }
+    .success-box h2 { font-size: 1.4rem; margin-bottom: 10px; }
+    .success-box p { color: var(--text-muted); font-size: .92rem; line-height: 1.6; }
+
+    /* Thank you page */
+    .thank-you-page {
+      display: none; min-height: 80vh;
+      flex-direction: column; justify-content: center; align-items: center;
+      text-align: center; padding: 60px 20px;
+    }
+    .thank-you-page.visible { display: flex; }
+    .thank-you-page .icon-circle {
+      width: 96px; height: 96px;
+      background: linear-gradient(135deg, #34d399, #059669);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      margin-bottom: 32px; font-size: 2.8rem; animation: popIn .5s cubic-bezier(.17,.67,.37,1.3);
+    }
+    .thank-you-page h2 { font-size: 2rem; margin-bottom: 12px; }
+    .thank-you-page p { color: var(--text-muted); font-size: 1.05rem; max-width: 500px; line-height: 1.7; }
+    @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+
+    /* ═══ PROGRESS CIRCLE (bottom-right) ═══ */
+    .progress-circle {
+      position: fixed; bottom: 28px; right: 28px; z-index: 60;
+      width: 64px; height: 64px; cursor: pointer;
+      filter: drop-shadow(0 4px 16px rgba(99,102,241,.5));
+      transition: transform .2s;
+    }
+    .progress-circle:hover { transform: scale(1.1); }
+    .progress-circle svg { width: 64px; height: 64px; transform: rotate(-90deg); }
+    .progress-circle .ring-bg { fill: none; stroke: var(--surface); stroke-width: 5; }
+    .progress-circle .ring-fg {
+      fill: none; stroke: url(#ringGrad); stroke-width: 5;
+      stroke-linecap: round;
+      stroke-dasharray: 163.36;
+      stroke-dashoffset: 163.36;
+      transition: stroke-dashoffset .6s cubic-bezier(.4,0,.2,1);
+    }
+    .progress-circle .pct-text {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .78rem; font-weight: 800; color: var(--text);
+      pointer-events: none; transition: opacity .2s;
+    }
+    .progress-circle .arrow-text {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; color: var(--text);
+      pointer-events: none; opacity: 0; transition: opacity .2s;
+    }
+    .progress-circle:hover .pct-text { opacity: 0; }
+    .progress-circle:hover .arrow-text { opacity: 1; }
+    .progress-circle.complete .ring-fg { stroke: var(--success); }
+    .progress-circle.complete .pct-text { color: var(--success); }
+
+    /* ═══ CONFETTI CANVAS ═══ */
+    #confettiCanvas {
+      position: fixed; inset: 0; z-index: 200;
+      pointer-events: none;
+    }
+
+    @media (max-width: 640px) {
+      .hero { padding: 32px 24px; }
+      .hero h1 { font-size: 1.5rem; }
+      .card { padding: 24px 20px; }
+      .video-row { grid-template-columns: 1fr; }
+      .radio-options { grid-template-columns: 1fr; }
+      .stats-bar { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- ═══ HERO ═══ -->
+    <div class="hero">
+      <h1>Humanoid Motion Comparison<br/>User Study — Part 1</h1>
+      <p>In this study, you will watch pairs of videos demonstrating humanoid motions generated by different control methods.</p>
+      <p>For each pair, please compare them and answer the questions based on your perception.</p>
+      <p style="margin-top:8px"><strong>Please watch both videos completely in full screen before answering.</strong></p>
+      <ul class="criteria">
+        <li>Whether the motion follows the text input</li>
+        <li>Smoothness of the motion</li>
+        <li>Overall stability</li>
+      </ul>
+    </div>
+
+    <!-- ═══ STATS ═══ -->
+    <div class="stats-bar">
+      <div class="stat-chip"><div class="num">41</div><div class="lbl">Motions</div></div>
+      <div class="stat-chip"><div class="num">41</div><div class="lbl">Comparisons</div></div>
+      <div class="stat-chip"><div class="num">123</div><div class="lbl">Total Questions</div></div>
+      <div class="stat-chip"><div class="num" id="answeredCount">0</div><div class="lbl">Answered</div></div>
+    </div>
+
+    <form id="studyForm" novalidate>
+
+      <!-- ═══ EMAIL ═══ -->
+      <div class="card" id="card-pid">
+        <label class="field-label required" for="participantId">Email Address</label>
+        <p class="field-desc">Please enter your email. One submission per email is allowed.</p>
+        <div class="email-row">
+          <input type="email" id="participantId" name="participantId" placeholder="e.g. you@example.com" required />
+          <button type="button" class="btn-confirm" id="confirmEmailBtn">Confirm</button>
+        </div>
+        <p class="error-msg" id="emailError">Please enter a valid email address.</p>
+      </div>
+
+      <!-- Sections inserted by JS -->
+      <div id="sectionsContainer"></div>
+
+      <div style="text-align:center; padding: 20px 0 80px;">
+        <button type="submit" class="btn btn-primary" style="padding: 14px 48px; font-size: 1rem;">Submit All Responses</button>
+      </div>
+    </form>
+
+    <!-- ═══ THANK YOU PAGE ═══ -->
+    <div class="thank-you-page" id="thankYouPage">
+      <div class="icon-circle">&#10003;</div>
+      <h2>Thank you for your time!</h2>
+      <p>Your responses have been recorded successfully.<br/>Thanks for your time. You may now close this page.</p>
+    </div>
+
+  </div>
+
+  <!-- Progress circle -->
+  <div class="progress-circle" id="progressCircle" title="Scroll to top">
+    <svg viewBox="0 0 56 56">
+      <defs>
+        <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#6366f1" />
+          <stop offset="100%" stop-color="#f59e0b" />
+        </linearGradient>
+      </defs>
+      <circle class="ring-bg" cx="28" cy="28" r="26" />
+      <circle class="ring-fg" id="ringFg" cx="28" cy="28" r="26" />
+    </svg>
+    <div class="pct-text" id="circlePct">0%</div>
+    <div class="arrow-text">&#8593;</div>
+  </div>
+  <canvas id="confettiCanvas"></canvas>
+
+  <script>
+    // ══════════════════════════════════════════════════════════
+    //  MOTION DATA — 41 common IDs with text prompts
+    // ══════════════════════════════════════════════════════════
+    const MOTIONS = [
+      { id: "115",  text: "person raises left arm to shoulder height and then lowers it back down by side" },
+      { id: "156",  text: "person stands still and lifts right hand to face and mouth area" },
+      { id: "281",  text: "person checking the time on his left wrist" },
+      { id: "312",  text: "a person uses their left hand to scratch their right wrist." },
+      { id: "333",  text: "a person jumped on the place" },
+      { id: "409",  text: "a person waves his hand enthusiastically" },
+      { id: "456",  text: "a person turns to the left and steps forward, then kicks with their right foot." },
+      { id: "504",  text: "a man kicks with his right leg and then kicks with his left leg." },
+      { id: "520",  text: "a person kicks with their left leg." },
+      { id: "554",  text: "a person, while standing in still, starts to fold arms, pauses shortly and releases them." },
+      { id: "556",  text: "a person jumps and spin in the air." },
+      { id: "568",  text: "the person does a couple of small kicks with his left leg" },
+      { id: "605",  text: "person walks whilst grabbing onto a banister to help their balance." },
+      { id: "765",  text: "a person steps forward and turns left, then shuffles around awkwardly." },
+      { id: "891",  text: "the person moves backwards as if pushed by someone in front of them." },
+      { id: "981",  text: "a person who is standing with his hands by his sides steps forward with his right foot, kicks out with his left foot and then steps back to his original position." },
+      { id: "1025", text: "a person doing jumping jacks in a single spot." },
+      { id: "1048", text: "a person walks forward, then holds their right arm in pain." },
+      { id: "1076", text: "the man kicks with his right foot." },
+      { id: "1104", text: "the sim appears to be adjusting a watch that is placed on their left wrist." },
+      { id: "1181", text: "the person is standing there." },
+      { id: "1197", text: "someone is running in place and then stops." },
+      { id: "1272", text: "a person stumbles forward while maintaining his balance." },
+      { id: "1381", text: "he is flying kick with his right leg" },
+      { id: "1433", text: "the man raises his left hand over his chest, waves out and back in toward his body, then releases it back down toward his hip." },
+      { id: "1510", text: "this person does jumping jacks then kicks with his right leg." },
+      { id: "1604", text: "a person walks forward." },
+      { id: "1654", text: "a figure gestures with arms outstretched to the left and then twists with arms still extended" },
+      { id: "1708", text: "the man plays the violin." },
+      { id: "1836", text: "a person looks to the right then turns left to take a look left." },
+      { id: "1840", text: "the stick figure is walking in form of a back wards letter j." },
+      { id: "1850", text: "a person walks diagonally forward, stops abruptly, grabs his head with his right hand, walks backward briefly, and then turn to the right and walks straight." },
+      { id: "1904", text: "a person waves, takes a step back, turns clockwise and waves again" },
+      { id: "1998", text: "a man walks slowly forwards." },
+      { id: "2036", text: "person is carefully scratching their head or ear." },
+      { id: "2052", text: "a person tapping on a surface" },
+      { id: "2150", text: "a person has something in their right hand, and brings it to their face." },
+      { id: "2321", text: "a person reaches for something with both hands, the raises their right hand then sets its hands back down." },
+      { id: "2346", text: "the person puts something on its side and then brings it back to normal." },
+      { id: "2358", text: "the person is doing knee lifts." },
+      { id: "2372", text: "a person picks up two objects, pours something from the right object into the left object, and then sets them back down." },
+    ];
+
+    const QUESTIONS = [
+      { key: 'q1', text: '1. Which motion follows the text input?' },
+      { key: 'q2', text: '2. Which motion of the two is smoother?' },
+      { key: 'q3', text: '3. Which motion is more stable overall?' },
+    ];
+    const OPTIONS = ['Video A', 'Video B', 'Both are similar'];
+
+    // ══════════════════════════════════════════════════════════
+    //  RANDOMIZE MOTION ORDER (Fisher-Yates shuffle)
+    // ══════════════════════════════════════════════════════════
+    for (let i = MOTIONS.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [MOTIONS[i], MOTIONS[j]] = [MOTIONS[j], MOTIONS[i]];
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  SHUFFLE MAP — randomly assign methods to Video A/B
+    //  Ours (DPO) vs OmniControl
+    // ══════════════════════════════════════════════════════════
+    const shuffleMap = {};   // { motionId: { a: 'dpo'|'omni', b: 'omni'|'dpo' } }
+    MOTIONS.forEach(m => {
+      const dpoFirst = Math.random() < 0.5;
+      shuffleMap[m.id] = dpoFirst
+        ? { a: 'dpo', b: 'omni' }
+        : { a: 'omni', b: 'dpo' };
+    });
+
+    // ══════════════════════════════════════════════════════════
+    //  BUILD SECTIONS DYNAMICALLY
+    // ══════════════════════════════════════════════════════════
+    const container = document.getElementById('sectionsContainer');
+
+    function makeRadioGroup(name, q) {
+      return `
+        <div class="question-group" data-required>
+          <p class="question-text required">${q.text}</p>
+          <div class="radio-options">
+            ${OPTIONS.map((opt, oi) => `
+              <div class="radio-option">
+                <input type="radio" name="${name}_${q.key}" id="${name}_${q.key}_${oi}" value="${opt}" />
+                <label for="${name}_${q.key}_${oi}">${opt}</label>
+              </div>`).join('')}
+          </div>
+          <p class="error-msg">Please select an option.</p>
+        </div>`;
+    }
+
+    // GitHub raw URL base for serving LFS files
+    const REPO = 'AnujithM/humanoid-user-study';
+    const BRANCH = 'main';
+    const BASE = `https://media.githubusercontent.com/media/${REPO}/${BRANCH}`;
+
+    MOTIONS.forEach((m, i) => {
+      const s = shuffleMap[m.id];
+      const srcA = s.a === 'dpo' ? `${BASE}/Real_DPO/${m.id}.mp4` : `${BASE}/Real_OMNI/${m.id}.mp4`;
+      const srcB = s.b === 'dpo' ? `${BASE}/Real_DPO/${m.id}.mp4` : `${BASE}/Real_OMNI/${m.id}.mp4`;
+
+      const card = document.createElement('div');
+      card.className = 'card comparison-card';
+      card.dataset.motionId = m.id;
+      card.dataset.comparison = 'omni';
+      card.innerHTML = `
+        <div class="section-header">
+          <div class="section-num">${i + 1}</div>
+          <div class="section-title">Ours vs OmniControl</div>
+          <div class="motion-id-badge">ID ${m.id}</div>
+        </div>
+        <div class="text-prompt">
+          <span class="icon">\uD83D\uDCAC</span>
+          <div>
+            <div class="prompt-label">Text Input</div>
+            <div class="prompt-text">\u201C${m.text}\u201D</div>
+          </div>
+        </div>
+        <div class="video-row">
+          <div class="video-cell">
+            <span class="video-tag tag-a">Video A</span>
+            <video controls preload="metadata"><source src="${srcA}" type="video/mp4" /></video>
+          </div>
+          <div class="video-cell">
+            <span class="video-tag tag-b">Video B</span>
+            <video controls preload="metadata"><source src="${srcB}" type="video/mp4" /></video>
+          </div>
+        </div>
+        ${QUESTIONS.map(q => makeRadioGroup('omni_m' + m.id, q)).join('')}
+      `;
+      container.appendChild(card);
+    });
+
+    // ══════════════════════════════════════════════════════════
+    //  RADIO HIGHLIGHT
+    // ══════════════════════════════════════════════════════════
+    document.addEventListener('change', (e) => {
+      if (e.target.type === 'radio') {
+        const group = e.target.closest('.radio-options');
+        group.querySelectorAll('.radio-option').forEach(o => o.classList.remove('selected'));
+        e.target.closest('.radio-option').classList.add('selected');
+        const qGroup = e.target.closest('.question-group');
+        if (qGroup) qGroup.classList.remove('has-error');
+      }
+    });
+
+    // ══════════════════════════════════════════════════════════
+    //  PROGRESS
+    // ══════════════════════════════════════════════════════════
+    const totalQs = MOTIONS.length * 3;
+
+    function updateProgress() {
+      let filled = 0;
+      MOTIONS.forEach(m => {
+        QUESTIONS.forEach(q => {
+          if (document.querySelector(`input[name="omni_m${m.id}_${q.key}"]:checked`)) filled++;
+        });
+      });
+      const pct = Math.round((filled / totalQs) * 100);
+      document.getElementById('answeredCount').textContent = filled;
+      updateCircle(pct);
+    }
+    document.addEventListener('input', updateProgress);
+
+    // Real-time email validation
+    const emailInput = document.getElementById('participantId');
+    const emailRegexLive = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    emailInput.addEventListener('input', function() {
+      this.classList.remove('valid-email', 'invalid-email');
+      document.getElementById('card-pid').classList.remove('has-error');
+    });
+    emailInput.addEventListener('blur', function() {
+      const val = this.value.trim();
+      if (!val) { this.classList.remove('valid-email', 'invalid-email'); return; }
+      if (emailRegexLive.test(val)) {
+        this.classList.add('valid-email');
+        this.classList.remove('invalid-email');
+      } else {
+        this.classList.add('invalid-email');
+        this.classList.remove('valid-email');
+        document.getElementById('emailError').textContent = 'Please enter a valid email address.';
+        document.getElementById('card-pid').classList.add('has-error');
+      }
+    });
+
+    // Confirm email button
+    let emailConfirmed = false;
+    document.getElementById('confirmEmailBtn').addEventListener('click', function() {
+      const val = emailInput.value.trim();
+      if (!val || !emailRegexLive.test(val)) {
+        emailInput.classList.add('invalid-email');
+        emailInput.classList.remove('valid-email');
+        document.getElementById('emailError').textContent = 'Please enter a valid email address.';
+        document.getElementById('card-pid').classList.add('has-error');
+        emailInput.focus();
+        return;
+      }
+      const submitted = JSON.parse(localStorage.getItem('userStudy1Submitted') || '[]');
+      if (submitted.includes(val.toLowerCase())) {
+        document.getElementById('emailError').textContent = 'This email has already submitted a response for Part 1.';
+        document.getElementById('card-pid').classList.add('has-error');
+        return;
+      }
+      emailConfirmed = true;
+      emailInput.disabled = true;
+      emailInput.classList.add('valid-email');
+      emailInput.classList.remove('invalid-email');
+      document.getElementById('card-pid').classList.remove('has-error');
+      this.textContent = '\u2713 Confirmed';
+      this.classList.add('confirmed');
+    });
+
+    document.addEventListener('change', updateProgress);
+
+    // ══════════════════════════════════════════════════════════
+    //  PROGRESS CIRCLE + CONFETTI
+    // ══════════════════════════════════════════════════════════
+    const circleEl = document.getElementById('progressCircle');
+    const ringFg = document.getElementById('ringFg');
+    const circlePct = document.getElementById('circlePct');
+    const circumference = 2 * Math.PI * 26;
+    let hasPopped = false;
+
+    function updateCircle(pct) {
+      const offset = circumference - (pct / 100) * circumference;
+      ringFg.style.strokeDashoffset = offset;
+      circlePct.textContent = pct + '%';
+      if (pct >= 100 && !hasPopped) {
+        hasPopped = true;
+        circleEl.classList.add('complete');
+        launchConfetti();
+      } else if (pct < 100) {
+        hasPopped = false;
+        circleEl.classList.remove('complete');
+      }
+    }
+
+    circleEl.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+    // ── Confetti engine ──
+    function launchConfetti() {
+      const canvas = document.getElementById('confettiCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const colors = ['#6366f1','#f59e0b','#ec4899','#34d399','#3b82f6','#a855f7','#f87171','#fbbf24'];
+      const particles = [];
+      const count = 150;
+
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          w: Math.random() * 10 + 5,
+          h: Math.random() * 6 + 3,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          vx: (Math.random() - .5) * 6,
+          vy: Math.random() * 4 + 2,
+          rot: Math.random() * 360,
+          rv: (Math.random() - .5) * 12,
+          opacity: 1,
+        });
+      }
+
+      let frame = 0;
+      const maxFrames = 180;
+
+      function animate() {
+        frame++;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.07;
+          p.rot += p.rv;
+          if (frame > maxFrames * 0.6) p.opacity -= 0.02;
+          if (p.opacity < 0) p.opacity = 0;
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rot * Math.PI) / 180);
+          ctx.globalAlpha = p.opacity;
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        });
+        if (frame < maxFrames) {
+          requestAnimationFrame(animate);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      animate();
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  SUBMIT
+    // ══════════════════════════════════════════════════════════
+    document.getElementById('studyForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      document.querySelectorAll('.has-error').forEach(el => el.classList.remove('has-error'));
+      let valid = true;
+
+      const pid = document.getElementById('participantId').value.trim();
+      if (!emailConfirmed) {
+        document.getElementById('emailError').textContent = 'Please confirm your email first.';
+        document.getElementById('card-pid').classList.add('has-error'); valid = false;
+      }
+
+      document.querySelectorAll('.question-group[data-required]').forEach(group => {
+        const radios = group.querySelectorAll('input[type="radio"]');
+        if (![...radios].some(r => r.checked)) { group.classList.add('has-error'); valid = false; }
+      });
+
+      if (!valid) {
+        const first = document.querySelector('.has-error');
+        if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      // Decode shuffle: convert "Video A"/"Video B" → actual method name
+      function decode(motionId, rawAnswer) {
+        if (rawAnswer === 'Both are similar') return rawAnswer;
+        const s = shuffleMap[motionId];
+        if (rawAnswer === 'Video A') return s.a === 'dpo' ? 'Ours' : 'OmniControl';
+        if (rawAnswer === 'Video B') return s.b === 'dpo' ? 'Ours' : 'OmniControl';
+        return rawAnswer;
+      }
+
+      const response = { timestamp: new Date().toISOString(), email: pid, study: 'omni' };
+      MOTIONS.forEach(m => {
+        QUESTIONS.forEach(q => {
+          const el = document.querySelector(`input[name="omni_m${m.id}_${q.key}"]:checked`);
+          response[`omni_m${m.id}_${q.key}`] = decode(m.id, el ? el.value : '');
+        });
+      });
+
+      // Mark email as submitted
+      const alreadySubmitted = JSON.parse(localStorage.getItem('userStudy1Submitted') || '[]');
+      alreadySubmitted.push(pid.toLowerCase());
+      localStorage.setItem('userStudy1Submitted', JSON.stringify(alreadySubmitted));
+
+      // ── Send to Google Sheets ──
+      submitToGoogleSheets(response);
+
+      // Hide entire form and show thank-you page
+      document.getElementById('studyForm').style.display = 'none';
+      document.querySelector('.hero').style.display = 'none';
+      document.querySelector('.stats-bar').style.display = 'none';
+      document.getElementById('progressCircle').style.display = 'none';
+      document.getElementById('thankYouPage').classList.add('visible');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // ══════════════════════════════════════════════════════════
+    //  GOOGLE SHEETS LOGGING
+    // ══════════════════════════════════════════════════════════
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEHBZYqnvL_zqWjcvg2Iz65rSgIIOmEpjrTpR07AWi-TmAOsHQu2EAhgHntFmOgkDwnA/exec';
+
+    function submitToGoogleSheets(response) {
+      if (!GOOGLE_SCRIPT_URL) {
+        console.warn('Google Sheets URL not set — response saved locally only.');
+        return;
+      }
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(response),
+      }).then(() => console.log('Sent to Google Sheets'))
+        .catch(err => console.error('Google Sheets error:', err));
+    }
+  </script>
+</body>
+</html>

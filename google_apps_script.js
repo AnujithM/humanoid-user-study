@@ -8,29 +8,52 @@
 //  1. Go to https://sheets.google.com → Create a new spreadsheet
 //     Name it: "User Study Responses"
 //
-//  2. Click Extensions → Apps Script
+//  2. Create two sheets (tabs) in the spreadsheet:
+//     - Sheet 1: rename to "Ours vs OmniControl"
+//     - Sheet 2: rename to "Ours vs MaskedMimic"
 //
-//  3. Delete all existing code and paste THIS entire file
+//  3. Click Extensions → Apps Script
 //
-//  4. Click Deploy → New Deployment
+//  4. Delete all existing code and paste THIS entire file
+//
+//  5. Click Deploy → New Deployment
 //     - Type: Web app
 //     - Execute as: Me
 //     - Who has access: Anyone
 //     - Click Deploy
 //
-//  5. Copy the Web App URL (looks like:
-//     https://script.google.com/macros/s/AKfycb.../exec)
+//  6. Copy the Web App URL and paste into BOTH user_study1.html and user_study2.html
 //
-//  6. Paste that URL into user_study.html at line:
-//     const GOOGLE_SCRIPT_URL = 'YOUR_URL_HERE';
+//  Routing:
+//   - user_study1.html sends { study: 'omni', ... } → logged to "Ours vs OmniControl" sheet
+//   - user_study2.html sends { study: 'mm', ... }   → logged to "Ours vs MaskedMimic" sheet
 //
-//  That's it! Every form submission will now log to your sheet:: https://anujithm.github.io/humanoid-user-study/user_study.html ::.
+//  URLs:
+//   - https://anujithm.github.io/humanoid-user-study/user_study1.html (Ours vs OmniControl)
+//   - https://anujithm.github.io/humanoid-user-study/user_study2.html (Ours vs MaskedMimic)
 // ═══════════════════════════════════════════════════════════
 
 function doPost(e) {
   try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
     var data = JSON.parse(e.postData.contents);
+
+    // Route to the correct sheet based on the "study" field
+    var sheetName;
+    if (data.study === 'mm') {
+      sheetName = 'Ours vs MaskedMimic';
+    } else {
+      sheetName = 'Ours vs OmniControl';  // default
+    }
+
+    // Get or create the target sheet
+    var sheet = ss.getSheetByName(sheetName);
+    if (!sheet) {
+      sheet = ss.insertSheet(sheetName);
+    }
+
+    // Remove the "study" key from data so it doesn't clutter the sheet
+    delete data.study;
 
     // If sheet is empty, write headers first
     if (sheet.getLastRow() === 0) {
@@ -56,7 +79,7 @@ function doPost(e) {
     sheet.appendRow(row);
 
     return ContentService
-      .createTextOutput(JSON.stringify({ status: 'success' }))
+      .createTextOutput(JSON.stringify({ status: 'success', sheet: sheetName }))
       .setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
@@ -69,6 +92,6 @@ function doPost(e) {
 // Allow GET requests to test the endpoint
 function doGet(e) {
   return ContentService
-    .createTextOutput(JSON.stringify({ status: 'ok', message: 'User Study Logger is running.' }))
+    .createTextOutput(JSON.stringify({ status: 'ok', message: 'User Study Logger is running. Routes: omni → Sheet 1, mm → Sheet 2.' }))
     .setMimeType(ContentService.MimeType.JSON);
 }
